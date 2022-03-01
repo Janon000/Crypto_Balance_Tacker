@@ -167,18 +167,17 @@ def ledger_to_balance(ledger_dict):
     # Use the ticker list to download the ohlc history for each coin in ledger
     coin_history = get_coin_history(ticker_dict)
 
-    # Reformat ledger dict so that they can be mapped to the ohlc dataframes
-    outerdics = {}
+    # Create dataframe for each crypto and corresponding balance for each day
+    ledger_dfs = {}
     for date, bal_dict in ledger_dict.items():
         for crypto, balance in bal_dict.items():
-            dics = {date: balance}
-            if crypto in outerdics:
-                outerdics[crypto].update(dics.copy())
+            row = {date: balance}
+            if crypto in ledger_dfs:
+                ledger_dfs[crypto].update(row.copy())
             else:
-                outerdics[crypto] = dics
-    for cryp, dict in outerdics:
-        df = pd.DataFrame({cryp: dict})
-        print(df)
+                ledger_dfs[crypto] = row.copy()
+    for crypto, dict in ledger_dfs.items():
+        df = pd.DataFrame({crypto: dict})
 
 
     # Build dataframe containing the USD balance for each asset for each day of the year
