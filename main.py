@@ -58,7 +58,7 @@ def get_coin_history(ticker_dict, currency='USD'):
         if altname != 'USD':
             time.sleep(2)
             pair = altname + currency
-            print('Retrieving 1 year data for ', pair)
+            print('Retrieving 1 year data for ', asset)
             ohlc, last = k.get_ohlc_data(pair, interval=1440)
             ohlc['date'] = pd.to_datetime(ohlc["time"], unit="s").dt.strftime("%Y-%m-%d")
             asset_history[asset] = ohlc[:365]
@@ -111,6 +111,7 @@ def process_ledger(ledger):
     # Add date field and usd balance field
     ledger['date'] = pd.to_datetime(ledger["time"], unit="s").dt.strftime("%Y-%m-%d")
     ledger['usdbalance'] = ''
+    ledger.to_excel('ledger.xlsx')
 
     # Get 1 year data for each coin in ledger
     history = get_coin_history(ticker_dict)
@@ -119,7 +120,7 @@ def process_ledger(ledger):
     dfs = []
     for crypto, ohlc in history.items():
         # Create subset of ledger for each crypto, drop duplicates on the same date to get the most recent balance
-        df = ledger.loc[ledger['ticker'] == crypto]
+        df = ledger.loc[ledger['asset'] == crypto]
         df2 = df.drop_duplicates('date', keep='first')
         # Merge the ohlc data for the year with the subset in the ledger to return the balance for each day of the year
         out = ohlc.merge(df2[['date', 'balance']], on='date', how='left')
@@ -133,10 +134,12 @@ def process_ledger(ledger):
         df.set_index('date') for df in dfs], axis=1, join='outer'
     ).reset_index()
 
+    combined.to_excel('combined.xlsx')
     return combined
 
 
-ledger = get_ledger_history()
+ledge = get_ledger_history()
+process_ledger(ledge)
 
 #ohlc = k.get_ohlc_data('EURUSD')
 
