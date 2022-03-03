@@ -70,6 +70,7 @@ def get_coin_history(ticker_dict, currency='USD'):
     :return: OHLC dataframe
     """
     asset_history = {}
+
     for crypto in set(ticker_dict.values()):
         if crypto is not None:
             time.sleep(2)
@@ -207,7 +208,22 @@ def ledger_to_balance(ledger_dict):
     df = df.set_index('Date')
     print(df)
     chart_data(df)"""
-
+"""# Search the
+    ledger_dict = ledger.to_dict('index')
+    print(ledger_dict)
+    for values in ledger_dict.values():
+        if values['ticker'] == 'USD':
+            values['usdbalance'] = values['balance']
+        else:
+            df = history[values['ticker']]
+            df.set_index('date')
+            hist = df.to_dict('index')
+            #print(df.index)
+            old_obj = df['vwap'][values['date']]*values['balance']
+            new_str = [str(x) for x in old_obj][0]
+            values['usdbalance'] =(float(new_str))
+    new_df = pd.DataFrame.from_dict(ledger_dict, orient='index')
+    print(new_df)"""
 
 get_ledger_history()
 
