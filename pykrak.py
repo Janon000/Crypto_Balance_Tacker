@@ -205,7 +205,8 @@ def ledger_to_balance(ledger_dict):
     testdict['Balance'] = balancelist
     df = pd.DataFrame(testdict, columns=['Date', 'Balance'])
     df = df.set_index('Date')
-    print(df)chart_data(df)"""
+    print(df)
+    chart_data(df)"""
 
 
 get_ledger_history()
