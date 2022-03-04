@@ -12,7 +12,7 @@ import pickle
 import plotly.graph_objs as go
 
 
-class kraken_chart():
+class kraken_chart:
 
     def __init__(self, apikey):
         self.api = krakenex.API()
@@ -101,8 +101,6 @@ class kraken_chart():
         pickle.dump(asset_history, history)
         return asset_history
 
-
-
     def process_ledger(self, ledger):
         """
         Return Dataframe showing asset balances over time
@@ -130,11 +128,13 @@ class kraken_chart():
             # Create subset of ledger for each crypto, drop duplicates on the same date to get the most recent balance
             df = ledger.loc[ledger['asset'] == crypto]
             df2 = df.drop_duplicates('date', keep='first')
+
             # Merge the ohlc data for the year with the subset in the ledger
             # to return the balance for each day of the year
             out = ohlc.merge(df2[['date', 'balance']], on='date', how='left')
             out.interpolate(method='backfill', axis=0, inplace=True)
-            # Calculate the daily usd balance for crypto and append to list
+
+            # Calculate the daily ohlc usd balance for crypto and append to list
             out[crypto] = out['balance'] * out['vwap']
             out[crypto + '_open'] = out['balance'] * out['open']
             out[crypto + '_high'] = out['balance'] * out['high']
@@ -142,12 +142,13 @@ class kraken_chart():
             out[crypto + '_close'] = out['balance'] * out['close']
             dfs.append(out[['date', crypto + '_open', crypto + '_high', crypto + '_low', crypto + '_close']])
 
-        # Create final dataframe using the dataframe for each crypto
+        # Create final dataframe using the dataframes for each crypto in the list
         combined = pd.concat([
             df.set_index('date') for df in dfs], axis=1, join='outer'
         )
         # Drop rows where there is no data for all columns
         combined.dropna(how='all', inplace=True)
+
         # Get the combined open, high low and close data
         combined['open'] = combined[[col for col in combined.columns if col.endswith('_open')]].sum(axis=1)
         combined['high'] = combined[[col for col in combined.columns if col.endswith('_high')]].sum(axis=1)
