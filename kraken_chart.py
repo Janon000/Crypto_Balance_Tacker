@@ -1,9 +1,16 @@
+"""
+An implementation of the pykrakenapi and Krakenex api
+for displaying crypto performance in chart form
+"""
+
+
 import krakenex
 from pykrakenapi import KrakenAPI
 import datetime as dt
 import time
 import pandas as pd
 import pickle
+import plotly.graph_objs as go
 
 
 api = krakenex.API()
@@ -71,7 +78,7 @@ def get_coin_history(ticker_dict, currency='USD'):
 def get_ledger_history():
     """
     Read the exchange ledger history as a dataframe
-    :return: Dataframe containing the daily balance for each asset
+    :return: Dataframe containing ledger of a kraken exchange wallet
     """
     # Get Unix timestamp for 1 year ago
     year = dt.date.today() - dt.timedelta(365)
@@ -127,20 +134,62 @@ def process_ledger(ledger):
         out.interpolate(method='backfill', axis=0, inplace=True)
         # Calculate the daily usd balance for crypto and append to list
         out[crypto] = out['balance'] * out['vwap']
-        dfs.append(out[['date', crypto]])
+        out[crypto+'_open'] = out['balance'] * out['open']
+        out[crypto+'_high'] = out['balance'] * out['high']
+        out[crypto+'_low'] = out['balance'] * out['low']
+        out[crypto+'_close'] = out['balance'] * out['close']
+        dfs.append(out[['date', crypto+'_open', crypto+'_high', crypto+'_low', crypto+'_close']])
 
     # Create final dataframe using the dataframe for each crypto
     combined = pd.concat([
         df.set_index('date') for df in dfs], axis=1, join='outer'
-    ).reset_index()
+    )
 
+    # Get the combined open, high low and close data
+    combined['open'] = combined[[col for col in combined.columns if col.endswith('_open')]].sum(axis=1)
+    combined['high'] = combined[[col for col in combined.columns if col.endswith('_high')]].sum(axis=1)
+    combined['low'] = combined[[col for col in combined.columns if col.endswith('_low')]].sum(axis=1)
+    combined['close'] = combined[[col for col in combined.columns if col.endswith('_close')]].sum(axis=1)
     combined.to_excel('combined.xlsx')
     return combined
 
 
-ledge = get_ledger_history()
-process_ledger(ledge)
+def chart_data(data):
+    # declare figure
+    fig = go.Figure()
 
-#ohlc = k.get_ohlc_data('EURUSD')
+    # Candlestick
+    fig.add_trace(go.Candlestick(x=data.index,
+                                 open=data['open'],
+                                 high=data['high'],
+                                 low=data['low'],
+                                 close=data['close'], name='market data'))
+    # Add titles
+    fig.update_layout(
+        title='Portfolio Balance',
+        yaxis_title='Balance (US Dollars)')
+
+    # X-Axes
+    fig.update_xaxes(
+        rangeslider_visible=True,
+        rangeselector=dict(
+            buttons=list([
+                dict(count=7, label="7d", step="minute", stepmode="backward"),
+                dict(count=30, label="1m", step="minute", stepmode="backward"),
+                dict(count=1, label="6m", step="day", stepmode="todate"),
+                dict(count=365, label="year", step="day", stepmode="backward"),
+                dict(step="all")
+            ])
+        )
+    )
+
+    # Launches browser window to show chart
+    fig.show()
+
+
+ledge = get_ledger_history()
+df = process_ledger(ledge)
+chart_data(df)
+
 
 
