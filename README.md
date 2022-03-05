@@ -1,5 +1,5 @@
 
-# Kraken Crypto Wallet Balance Chart
+# Kraken Crypto Balance Chart
 
 Display the performance of a Kraken exchange account using an ohlc chart
 Default currency pair is USD
