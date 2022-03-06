@@ -18,7 +18,7 @@ Default currency pair is USD
     # Get an instance of kraken chart class
     kc = kraken_chart(apikey_path)
 
-    # Returns ledger as a dataframe, query speed
+    # Returns ledger as a datafram
     ledger = kc.get_ledger_history()
 
     # Get ledger as an ohlc candle chart showing crypto performance against USD
